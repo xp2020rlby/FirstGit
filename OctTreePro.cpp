@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_DEPRECATE
+ï»¿#define _CRT_SECURE_NO_DEPRECATE
 
 #include <windows.h>
 #include <cstdio>
@@ -10,11 +10,12 @@ typedef unsigned char uint8;
 
 struct octNode
 {
-	long long cnt;//±¾½áµãÒÔÏÂµÄÏñËØ×ÜÊı
-	long long rSum, gSum, bSum;//ºìÉ«·ÖÁ¿¡¢ÂÌÉ«·ÖÁ¿¡¢À¶É«·ÖÁ¿»Ò¶ÈÖµµÄºÍ
-	bool isLeaf;//ÊÇ·ñÊÇÒ¶×Ó½áµã
-	int depth;//±¾½ÚµãµÄÉî¶È
-	octNode* child[8];//8¸ö×Ó½áµãµÄÖ¸ÕëÊı×é
+	long long cnt;//æœ¬ç»“ç‚¹ä»¥ä¸‹çš„åƒç´ æ€»æ•°
+	long long rSum, gSum, bSum;//çº¢è‰²åˆ†é‡ã€ç»¿è‰²åˆ†é‡ã€è“è‰²åˆ†é‡ç°åº¦å€¼çš„å’Œ
+	bool isLeaf;//æ˜¯å¦æ˜¯å¶å­ç»“ç‚¹
+	//bool ifNew;
+	int depth;//æœ¬èŠ‚ç‚¹çš„æ·±åº¦
+	octNode* child[8];//8ä¸ªå­ç»“ç‚¹çš„æŒ‡é’ˆæ•°ç»„
 	octNode*next;
 };
 /*
@@ -38,25 +39,21 @@ public:
 	void FreeOctree(octNode *& Node);
 	octNode* CreateOneNode(int depth);
 	octNode* Locate(int *List, int depth, octNode*Node);
-	void FindANode(octNode* node, RGBQUAD *pal); 
-	void FindANode_0(octNode* node, RGBQUAD *pal);
+	void FindANode(octNode* node, RGBQUAD *pal);
 	void combineTree();
 	void empty();
-	void insertColor(uint8 r, uint8 g, uint8 b);						//²åÈëÒ»¸öÑÕÉ«
-	uint8 generatePalette(RGBQUAD *pal);						//Éú³Éµ÷É«°å
-	uint8 generatePalette_0(RGBQUAD *pal);
+	void insertColor(uint8 r, uint8 g, uint8 b);						//æ’å…¥ä¸€ä¸ªé¢œè‰²
+	uint8 generatePalette(RGBQUAD *pal);						//ç”Ÿæˆè°ƒè‰²æ¿
 private:
-	octNode *root;														//°Ë²æÊ÷µÄ¸ù
-	int colors;															//µ±Ç°µÄÑÕÉ«×ÜÊı
-	int maxColors;														//×î´óÑÕÉ«Êı
+	octNode *root;														//å…«å‰æ ‘çš„æ ¹
+	int colors;															//å½“å‰çš„é¢œè‰²æ€»æ•°
+	int maxColors;														//æœ€å¤§é¢œè‰²æ•°
 	int pixnum;
 	int remcolor;
 	octNode *depthhead[9];
-	octNode *panelhead;
 };
 octTree::octTree() {
 	root = NULL;
-	panelhead = NULL;
 	colors = 0;
 	maxColors = 0;
 	pixnum = 0;
@@ -68,7 +65,6 @@ octTree::octTree() {
 }
 octTree::octTree(int maxColorNum) {
 	root = NULL;
-	panelhead = NULL;
 	colors = 0;
 	maxColors = maxColorNum;
 	pixnum = 0;
@@ -79,7 +75,7 @@ octTree::octTree(int maxColorNum) {
 	}
 }
 
-//ÊÍ·Å°Ë²æÊ÷µÄÄÚ´æ¿Õ¼ä
+//é‡Šæ”¾å…«å‰æ ‘çš„å†…å­˜ç©ºé—´
 octTree::~octTree()
 {
 	//To do....
@@ -95,7 +91,7 @@ void octTree::empty() {
 	}
 }
 void octTree::FreeOctree(octNode *& Node) {
-	//if (Node == NULL)
+//if (Node == NULL)
 	if (!Node)
 		return;
 	for (int i = 0; i < 8; i++)
@@ -126,37 +122,40 @@ octNode* octTree::CreateOneNode(int depth) {
 		p->next = depthhead[depth];
 		depthhead[depth] = p;
 	}
-
+		
 	//p->ifNew = true;
 	for (int i = 0; i < 8; i++)
 		p->child[i] = NULL;
 	return p;
 }
-octNode* octTree::Locate(int *List, int depth, octNode*FNode) {
+octNode* octTree::Locate(int *List,int depth,octNode*FNode) {
 	int n = List[depth];
 	if (FNode->child[n] == NULL) {
 		FNode->child[n] = CreateOneNode(depth + 1);
 		if (!FNode->child[n])return NULL;
 	}
+		
 
-
-	if (FNode->child[n]->isLeaf == false) {
+	if (FNode->child[n]->isLeaf==false) {
 		FNode->cnt++;
 		FNode->child[n]->isLeaf = false;
-		octNode*p = Locate(List, depth + 1, FNode->child[n]);
+		octNode*p= Locate(List, depth+1, FNode->child[n]);
 		return p;
 	}
 	else {
+		//if (FNode->child[n]->ifNew == true) 
+			//FNode->child[n]->cnt++;
 		FNode->cnt++;
+		//FNode->child[n]->isLeaf = true;
 		return FNode->child[n];
 	}
+	
 
-
-
-
-
+		
+	
+	
 }
-//Íù°Ë²æÊ÷ÖĞÌí¼ÓÒ»¸öÏñËØµÄÑÕÉ«
+//å¾€å…«å‰æ ‘ä¸­æ·»åŠ ä¸€ä¸ªåƒç´ çš„é¢œè‰²
 
 void octTree::insertColor(uint8 r, uint8 g, uint8 b)
 {
@@ -170,22 +169,24 @@ void octTree::insertColor(uint8 r, uint8 g, uint8 b)
 		int bb = ((b&map[dp]) >> shift);
 		LocationList[dp] = rb | gb | bb;
 	}
-	octNode*N = Locate(LocationList, 0, root);
+	octNode*N = Locate(LocationList, 0,root);
 	if (!N) {
 		printf("creat a node false!");
 		return;
 	}
+		
+	//if (N->ifNew == TRUE) {//å¦‚æœæ˜¯æ–°é¢œè‰²é‚£ä¹ˆæ·»åŠ ï¼Œå¦‚æœä¸æ˜¯ç»“æŸå³å¯
 	N->rSum += r;
 	N->gSum += g;
 	N->bSum += b;
 	//N->isLeaf = true;
-	N->cnt++;
+	N->cnt ++;
 	//N->ifNew = FALSE;
 	pixnum++;
-	if (colors > maxColors)//Èç¹ûÒ¶µãÊı³¬¹ıÁË×î´óÔÊĞíµÄÑÕÉ«ÊınMaxColors£¬ĞèÒª²Ã¼ôÖÁĞ¡ÓÚnMaxColorsÎªÖ¹
+	if (colors > maxColors)//å¦‚æœå¶ç‚¹æ•°è¶…è¿‡äº†æœ€å¤§å…è®¸çš„é¢œè‰²æ•°nMaxColorsï¼Œéœ€è¦è£å‰ªè‡³å°äºnMaxColorsä¸ºæ­¢
 		combineTree();
-
-
+	
+	
 }
 
 /*
@@ -214,7 +215,7 @@ void octTree::insertColor(uint8 r, uint8 g, uint8 b)
 		return;
 	}
 
-	//if (N->ifNew == TRUE) {//Èç¹ûÊÇĞÂÑÕÉ«ÄÇÃ´Ìí¼Ó£¬Èç¹û²»ÊÇ½áÊø¼´¿É
+	//if (N->ifNew == TRUE) {//å¦‚æœæ˜¯æ–°é¢œè‰²é‚£ä¹ˆæ·»åŠ ï¼Œå¦‚æœä¸æ˜¯ç»“æŸå³å¯
 	N->rSum = r;
 	N->gSum = g;
 	N->bSum = b;
@@ -222,14 +223,14 @@ void octTree::insertColor(uint8 r, uint8 g, uint8 b)
 	N->cnt++;
 	//N->ifNew = FALSE;
 	pixnum++;
-	//if (colors > maxColors)//Èç¹ûÒ¶µãÊı³¬¹ıÁË×î´óÔÊĞíµÄÑÕÉ«ÊınMaxColors£¬ĞèÒª²Ã¼ôÖÁĞ¡ÓÚnMaxColorsÎªÖ¹
+	//if (colors > maxColors)//å¦‚æœå¶ç‚¹æ•°è¶…è¿‡äº†æœ€å¤§å…è®¸çš„é¢œè‰²æ•°nMaxColorsï¼Œéœ€è¦è£å‰ªè‡³å°äºnMaxColorsä¸ºæ­¢
 		//combineTree();
 
 
 }*/
 void octTree::combineTree() {
 	while (colors > maxColors) {
-		//Ñ°ÕÒÒ»¸ö×îÉîµÄ·ÇÒ¶×Ó½Úµã£¬ºÏ²¢Ö®ÏÂµÄ×Ó½Úµã
+		//å¯»æ‰¾ä¸€ä¸ªæœ€æ·±çš„éå¶å­èŠ‚ç‚¹ï¼Œåˆå¹¶ä¹‹ä¸‹çš„å­èŠ‚ç‚¹
 		int L = 7;
 		for (; (L > 0) && (depthhead[L] == NULL); L--);
 		if (depthhead[L] == NULL) {
@@ -245,7 +246,7 @@ void octTree::combineTree() {
 		int childsum = 0, pixn = 0;
 		for (int i = 0; i < 8; i++) {
 			octNode*n = p->child[i];
-			if (n != NULL) {
+			if (n!= NULL) {
 				p->rSum += n->rSum;
 				p->bSum += n->bSum;
 				p->gSum += n->gSum;
@@ -269,21 +270,21 @@ void octTree::combineTree() {
 		depthhead[L] = p->next;
 		p->next = NULL;
 	}
-
+	
 }
 
-//¸ù¾İÏÖÓĞµÄ°Ë²æÊ÷£¬Ñ¡Ôñ256¸öÑÕÉ«×÷Îª×îÖÕµÄµ÷É«°åÖĞµÄÑÕÉ«
-uint8 octTree::generatePalette_0(RGBQUAD *pal)
+//æ ¹æ®ç°æœ‰çš„å…«å‰æ ‘ï¼Œé€‰æ‹©256ä¸ªé¢œè‰²ä½œä¸ºæœ€ç»ˆçš„è°ƒè‰²æ¿ä¸­çš„é¢œè‰²
+uint8 octTree::generatePalette(RGBQUAD *pal)
 {
 	//....
 	printf("%d\n", colors);
 	//combineTree();
 	remcolor = 0;
-	FindANode_0(root, pal);
+	FindANode(root, pal);
 	printf("%d\n", remcolor);
 	return 0;
 }
-void octTree::FindANode_0(octNode* node, RGBQUAD *pal) {
+void octTree::FindANode(octNode* node, RGBQUAD *pal) {
 	if (node->isLeaf == true) {
 		pal[remcolor].rgbRed = (node->rSum) / (node->cnt);
 		pal[remcolor].rgbGreen = node->gSum / node->cnt;
@@ -294,97 +295,43 @@ void octTree::FindANode_0(octNode* node, RGBQUAD *pal) {
 	else {
 		for (int i = 0; i < 8; i++) {
 			if (node->child[i] != NULL) {
-				FindANode(node->child[i], pal);
-			}
-		}
-	}
-}
-uint8 octTree::generatePalette(RGBQUAD *pal)
-{
-	//....
-	printf("%d\n", colors);
-	//combineTree();
-	remcolor = 0;
-	FindANode(root, pal);
-	printf("%d\n", remcolor);//2048É«
-	octNode*p = panelhead;
-	for (int i = 0; i < 256; i++) {
-		pal[i].rgbRed = (p->rSum)/(p->cnt);
-		pal[i].rgbGreen = (p->gSum) / (p->cnt);
-		pal[i].rgbBlue = (p->bSum) / (p->cnt);
-		pal[i].rgbReserved = 0;
-		p = p->next;
-	}
-	return 0;
-}
-void octTree::FindANode(octNode* node, RGBQUAD *pal) {
-	if (node->isLeaf == true) {
-		if (panelhead == NULL)
-		{
-			panelhead = node;
-			if (node->next != NULL)
-				printf("FindANode!node->next!=NULL!\n");
-			remcolor++;
-		}
-		else {
-			if (node->cnt >= panelhead->cnt) {
-				node->next = panelhead;
-				panelhead = node;
-				remcolor++;
-			}
-			else {
-				octNode*p = panelhead;
-				for (; p->next != NULL; p = p->next) {
-					if (node->cnt >= p->next->cnt)
-						break;
-				}
-				node->next = p->next;
-				p->next = node;
-				remcolor++;
-			}
-		
-		}
-	}
-	else {
-		for (int i = 0; i < 8; i++) {
-			if (node->child[i] != NULL) {
-				FindANode(node->child[i], pal);
+				FindANode(node->child[i],pal);
 			}
 		}
 	}
 }
 
-//´Óµ÷É«°åÖĞÑ¡³öÓë¸ø¶¨ÑÕÉ«×î½Ó½üµÄÑÕÉ«
+//ä»è°ƒè‰²æ¿ä¸­é€‰å‡ºä¸ç»™å®šé¢œè‰²æœ€æ¥è¿‘çš„é¢œè‰²
 uint8 selectClosestColor(uint8 r, uint8 g, uint8 b, RGBQUAD *pal)
 {
-	uint8 gal = 0; int min = 1000;
+	uint8 gal = 0;int min = 1000;
 	for (int i = 0; i < 256; i++) {
-		int m = abs(r - pal[i].rgbRed) + abs(g - pal[i].rgbGreen) + abs(b - pal[i].rgbBlue);
+		int m = abs(r-pal[i].rgbRed)+ abs(g - pal[i].rgbGreen)+ abs(b - pal[i].rgbBlue);
 		if (m < min) {
 			gal = i;
 			min = m;
 		}
 	}
-	return (uint8)gal;//¸ø¶¨Ä³ÑÕÉ«£¬·µ»ØÆäÔÚµ÷É«°åÖĞ×î½üËÆÑÕÉ«µÄË÷ÒıÖµ
+	return (uint8)gal;//ç»™å®šæŸé¢œè‰²ï¼Œè¿”å›å…¶åœ¨è°ƒè‰²æ¿ä¸­æœ€è¿‘ä¼¼é¢œè‰²çš„ç´¢å¼•å€¼
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[])	
 {
 	if (argc < 3)
 	{
 		printf("using: exe[0], input file[1], output file[2]\n");
 		return -1;
 	}
-	BITMAPFILEHEADER bf, *pbf;//ÊäÈë¡¢Êä³öÎÄ¼şµÄÎÄ¼şÍ·
-	BITMAPINFOHEADER bi, *pbi;//ÊäÈë¡¢Êä³öÎÄ¼şµÄĞÅÏ¢Í·
-	RGBQUAD *pRGBQuad;//´ıÉú³ÉµÄµ÷É«°åÖ¸Õë
-	uint8 *pImage;//×ª»»ºóµÄÍ¼ÏóÊı¾İ
-	DWORD bfSize;//ÎÄ¼ş´óĞ¡
-	LONG biWidth, biHeight;//Í¼Ïó¿í¶È¡¢¸ß¶È
-	DWORD biSizeImage;//Í¼ÏóµÄ´óĞ¡£¬ÒÔ×Ö½ÚÎªµ¥Î»£¬Ã¿ĞĞ×Ö½ÚÊı±ØĞëÊÇ4µÄÕûÊı±¶
-	unsigned long biFullWidth;//Ã¿ĞĞ×Ö½ÚÊı±ØĞëÊÇ4µÄÕûÊı±¶
+	BITMAPFILEHEADER bf, *pbf;//è¾“å…¥ã€è¾“å‡ºæ–‡ä»¶çš„æ–‡ä»¶å¤´
+	BITMAPINFOHEADER bi, *pbi;//è¾“å…¥ã€è¾“å‡ºæ–‡ä»¶çš„ä¿¡æ¯å¤´
+	RGBQUAD *pRGBQuad;//å¾…ç”Ÿæˆçš„è°ƒè‰²æ¿æŒ‡é’ˆ
+	uint8 *pImage;//è½¬æ¢åçš„å›¾è±¡æ•°æ®
+	DWORD bfSize;//æ–‡ä»¶å¤§å°
+	LONG biWidth, biHeight;//å›¾è±¡å®½åº¦ã€é«˜åº¦
+	DWORD biSizeImage;//å›¾è±¡çš„å¤§å°ï¼Œä»¥å­—èŠ‚ä¸ºå•ä½ï¼Œæ¯è¡Œå­—èŠ‚æ•°å¿…é¡»æ˜¯4çš„æ•´æ•°å€
+	unsigned long biFullWidth;//æ¯è¡Œå­—èŠ‚æ•°å¿…é¡»æ˜¯4çš„æ•´æ•°å€
 
-	//´ò¿ªÊäÈëÎÄ¼ş
+	//æ‰“å¼€è¾“å…¥æ–‡ä»¶
 	char *inputName, *outputName;
 	FILE *fpIn, *fpOut;
 	inputName = argv[1];
@@ -397,7 +344,7 @@ int main(int argc, char *argv[])
 	}
 	printf("Success!\n");
 
-	//´´½¨Êä³öÎÄ¼ş
+	//åˆ›å»ºè¾“å‡ºæ–‡ä»¶
 	printf("Creating %s ... \n", outputName);
 	if (!(fpOut = fopen(outputName, "wb")))
 	{
@@ -406,25 +353,25 @@ int main(int argc, char *argv[])
 	}
 	printf("Success!\n");
 
-	//¶ÁÈ¡ÊäÈëÎÄ¼şµÄÎÄ¼şÍ·¡¢ĞÅÏ¢Í·
+	//è¯»å–è¾“å…¥æ–‡ä»¶çš„æ–‡ä»¶å¤´ã€ä¿¡æ¯å¤´
 	fread(&bf, sizeof(BITMAPFILEHEADER), 1, fpIn);
 	fread(&bi, sizeof(BITMAPINFOHEADER), 1, fpIn);
 
-	//¶ÁÈ¡ÎÄ¼şĞÅÏ¢
+	//è¯»å–æ–‡ä»¶ä¿¡æ¯
 	biWidth = bi.biWidth;
 	biHeight = bi.biHeight;
-	biFullWidth = ceil(biWidth / 4.) * 4;//bmpÎÄ¼şÃ¿Ò»ĞĞµÄ×Ö½ÚÊı±ØĞëÊÇ4µÄÕûÊı±¶
+	biFullWidth = ceil(biWidth / 4.) * 4;//bmpæ–‡ä»¶æ¯ä¸€è¡Œçš„å­—èŠ‚æ•°å¿…é¡»æ˜¯4çš„æ•´æ•°å€
 	biSizeImage = biFullWidth * biHeight;
-	bfSize = biFullWidth * biHeight + 54 + 256 * 4;//Í¼ÏóÎÄ¼şµÄ´óĞ¡£¬°üº¬ÎÄ¼şÍ·¡¢ĞÅÏ¢Í·
+	bfSize = biFullWidth * biHeight + 54 + 256 * 4;//å›¾è±¡æ–‡ä»¶çš„å¤§å°ï¼ŒåŒ…å«æ–‡ä»¶å¤´ã€ä¿¡æ¯å¤´
 
-	//ÉèÖÃÊä³öÎÄ¼şµÄBITMAPFILEHEADER
+	//è®¾ç½®è¾“å‡ºæ–‡ä»¶çš„BITMAPFILEHEADER
 	pbf = new BITMAPFILEHEADER;
 	pbf->bfType = 19778;
 	pbf->bfSize = bfSize;
 	pbf->bfReserved1 = 0;
 	pbf->bfReserved2 = 0;
 	pbf->bfOffBits = 54 + 256 * 4;
-	//Ğ´³öBITMAPFILEHEADER
+	//å†™å‡ºBITMAPFILEHEADER
 	if (fwrite(pbf, sizeof(BITMAPFILEHEADER), 1, fpOut) != 1)
 	{
 		printf("\nCan't write bitmap file header!\n");
@@ -432,7 +379,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	//ÉèÖÃÊä³öÎÄ¼şµÄBITMAPINFOHEADER
+	//è®¾ç½®è¾“å‡ºæ–‡ä»¶çš„BITMAPINFOHEADER
 	pbi = new BITMAPINFOHEADER;
 	pbi->biSize = 40;
 	pbi->biWidth = biWidth;
@@ -445,7 +392,7 @@ int main(int argc, char *argv[])
 	pbi->biYPelsPerMeter = 0;
 	pbi->biClrUsed = 0;
 	pbi->biClrImportant = 0;
-	//Ğ´³öBITMAPFILEHEADER
+	//å†™å‡ºBITMAPFILEHEADER
 	if (fwrite(pbi, sizeof(BITMAPINFOHEADER), 1, fpOut) != 1)
 	{
 		printf("\nCan't write bitmap info header!\n");
@@ -453,19 +400,18 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	//¹¹½¨ÑÕÉ«°Ë²æÊ÷
+	//æ„å»ºé¢œè‰²å…«å‰æ ‘
 	printf("Building Color OctTree ...\n");
 	octTree *tree;
-	//tree = new octTree(2048);
-	tree = new octTree(256);//¸Ä½øÇ°Ëã·¨
+	tree = new octTree(256);
 	uint8 RGB[3];
-	//¶ÁÈ¡Í¼ÏñÖĞÃ¿¸öÏñËØµÄÑÕÉ«£¬²¢½«Æä²åÈëÑÕÉ«°Ë²æÊ÷
+	//è¯»å–å›¾åƒä¸­æ¯ä¸ªåƒç´ çš„é¢œè‰²ï¼Œå¹¶å°†å…¶æ’å…¥é¢œè‰²å…«å‰æ ‘
 	for (int i = 0; i < bi.biHeight; i++)
 	{
 		fseek(fpIn, bf.bfOffBits + i * ceil(biWidth * 3 / 4.) * 4, 0);
 		for (int j = 0; j < bi.biWidth; j++)
 		{
-			//¶ÁÈ¡Ò»¸öÏñËØµÄÑÕÉ«£¬²¢½«Æä²åÈëÑÕÉ«°Ë²æÊ÷
+			//è¯»å–ä¸€ä¸ªåƒç´ çš„é¢œè‰²ï¼Œå¹¶å°†å…¶æ’å…¥é¢œè‰²å…«å‰æ ‘
 			fread(&RGB, 3, 1, fpIn);
 			//printf("%02X %02X %02X\n", RGB[2], RGB[1], RGB[0]);
 			tree->insertColor(RGB[2], RGB[1], RGB[0]);
@@ -473,12 +419,12 @@ int main(int argc, char *argv[])
 	}
 	printf("Success!\n");
 
-	//Éú³É²¢Ìî³äµ÷É«°å
+	//ç”Ÿæˆå¹¶å¡«å……è°ƒè‰²æ¿
 	printf("Generating palette ... \n");
 	pRGBQuad = new RGBQUAD[256];
-	//tree->generatePalette(pRGBQuad);
-	tree->generatePalette_0(pRGBQuad);//¸Ä½øÇ°Ëã·¨
-	//Êä³ö256É«µ÷É«°å
+	tree->generatePalette(pRGBQuad);
+
+	//è¾“å‡º256è‰²è°ƒè‰²æ¿
 	if (fwrite(pRGBQuad, 256 * sizeof(RGBQUAD), 1, fpOut) != 1)
 	{
 		printf("\nCan't write palette!\n");
@@ -487,7 +433,7 @@ int main(int argc, char *argv[])
 	}
 	printf("Success!\n");
 
-	//Ìî³äÍ¼ÏñÊı¾İ
+	//å¡«å……å›¾åƒæ•°æ®
 	printf("Generating the output image ... \n");
 	pImage = new uint8[biSizeImage];
 	memset(pImage, 0, biSizeImage);
@@ -496,12 +442,12 @@ int main(int argc, char *argv[])
 		fseek(fpIn, bf.bfOffBits + i * ceil(biWidth * 3 / 4.) * 4, 0);
 		for (int j = 0; j < bi.biWidth; j++)
 		{
-			//¶ÁÈ¡Ò»¸öÏñËØµÄÑÕÉ«£¬²¢½«Æä×ª»»Î»ÑÕÉ«Ë÷ÒıÖµ
+			//è¯»å–ä¸€ä¸ªåƒç´ çš„é¢œè‰²ï¼Œå¹¶å°†å…¶è½¬æ¢ä½é¢œè‰²ç´¢å¼•å€¼
 			fread(&RGB, 3, 1, fpIn);
 			pImage[i*biFullWidth + j] = selectClosestColor(RGB[2], RGB[1], RGB[0], pRGBQuad);
 		}
 	}
-	//Êä³öÍ¼ÏóÊı¾İ
+	//è¾“å‡ºå›¾è±¡æ•°æ®
 	if (fwrite(pImage, biSizeImage, 1, fpOut) != 1)
 	{
 		printf("\nCan't write image data!\n");
